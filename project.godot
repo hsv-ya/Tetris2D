@@ -11,6 +11,17 @@ config_version=5
 [application]
 
 config/name="Tetris 2D"
+config/description="Easy Tetris 2D - written in Godot 4.3
+
+TODO
+ - add figure rotation
+ - add a quick figure landing
+ - add scoring
+ - add full line deletion
+ - add an increase in falling speed
+ - add release for smartphones
+"
+config/version="0.1.0.0"
 run/main_scene="res://ui.tscn"
 config/features=PackedStringArray("4.3", "GL Compatibility")
 config/icon="res://icon.svg"
@@ -61,3 +72,4 @@ ui_down={
 
 renderer/rendering_method="gl_compatibility"
 renderer/rendering_method.mobile="gl_compatibility"
+textures/vram_compression/import_etc2_astc=true
