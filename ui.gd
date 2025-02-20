@@ -8,13 +8,9 @@ var tile4 = [23, 21, 11, 12, 13]
 var tile5 = [23, 11, 12, 13, 22]
 var tiles = [tile1, tile2, tile3, tile4, tile5]
 
-var nul_tile = [[0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]]
 var tek_tile = [[0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]]
-var tek_color: Color
 var tek_x: int = 0
 var tek_y: int = 0
-var tek_w: int = 0
-var tek_h: int = 0
 var tek_nodes: Array = [
 	[null, null, null, null],
 	[null, null, null, null],
@@ -54,11 +50,14 @@ var bits: Array = [ # 13x8
 	[null, null, null, null, null, null, null, null],
 ]
 
+var ignore_ = false
+
 func _ready() -> void:
 	new_game()
 
-func _process(_delta: float) -> void:
-#func _physics_process(_delta: float) -> void:
+func _physics_process(_delta: float) -> void:
+	if ignore_:
+		return
 	if timer.is_stopped():
 		if Input.is_action_pressed("ui_text_newline"):
 			new_game()
@@ -75,6 +74,20 @@ func _process(_delta: float) -> void:
 			_x = max_cols - 1
 	var old_y = tek_y
 	var _y = tek_y
+	if Input.is_action_pressed("quick_down"):
+		ignore_ = true
+		var find_ground = _y
+		for _q in range(_y, max_rows):
+			find_ground = _q
+			if !check_tile_y(_q):
+				break
+		for _q in range(_y, find_ground):
+			tek_y = _q
+			show_tile()
+		await get_tree().create_timer(0.5).timeout
+		new_tile()
+		ignore_ = false
+		return
 	if Input.is_action_pressed("ui_down"):
 		_y += 1
 		if _y > (max_rows - 1):
@@ -116,6 +129,12 @@ func end_game() -> void:
 	timer.stop()
 	game_over.visible = true
 
+func get_color_for_new_tile() -> Color:
+	return colors[randi() % 5]
+
+func get_new_figure_for_tile() -> Array:
+	return tiles[randi() % 5]
+
 func new_tile() -> void:
 	for ix in range(0, 4):
 		for iy in range(0, 4):
@@ -126,11 +145,8 @@ func new_tile() -> void:
 
 	tek_x = def_x
 	tek_y = def_y
-	tek_color = colors[randi() % 5]
-	var tile0 = tiles[randi() % 5]
-	tek_w = tile0[0] % 10
-	tek_h = tile0[0] / 10
-	tek_tile = nul_tile.duplicate()
+	var tek_color = get_color_for_new_tile()
+	var tile0 = get_new_figure_for_tile()
 	for i in range(1, 5):
 		var x = tile0[i] / 10 - 1
 		var y = tile0[i] % 10 - 1
@@ -179,6 +195,8 @@ func check_tile(new_x, new_y) -> bool:
 	return true
 
 func _on_timer_timeout() -> void:
+	if ignore_:
+		return
 	if !check_tile_y(tek_y + 1):
 		new_tile()
 		return

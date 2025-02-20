@@ -50,7 +50,7 @@ offset_bottom = 270.0
 [node name="GroundWall" type="ColorRect" parent="."]
 layout_mode = 0
 offset_left = -161.0
-offset_top = 250.0
+offset_top = 251.0
 offset_right = 161.0
 offset_bottom = 270.0
 
