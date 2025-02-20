@@ -1,17 +1,26 @@
 extends Control
 
 var colors = [Color.AQUA, Color.BLUE, Color.GREEN, Color.RED, Color.YELLOW]
-var tile1 = [14, 11, 12, 13, 14]
-var tile2 = [23, 11, 12, 13, 23]
-var tile3 = [22, 11, 12, 22, 21]
-var tile4 = [23, 21, 11, 12, 13]
-var tile5 = [23, 11, 12, 13, 22]
+var colors_size = colors.size()
+var tile1 = [1, 11, 12, 13, 14]
+var tile2 = [4, 11, 12, 13, 23]
+var tile3 = [0, 11, 12, 22, 21]
+var tile4 = [4, 21, 11, 12, 13]
+var tile5 = [4, 11, 12, 13, 22]
 var tiles = [tile1, tile2, tile3, tile4, tile5]
+var tiles_size = tiles.size()
 
 var tek_x: int = 0
 var tek_y: int = 0
 var tek_r: int = 0
 var tek_r_max: int = 0
+var maybe_nodes: Array = [
+	[null, null, null, null],
+	[null, null, null, null],
+	[null, null, null, null],
+	[null, null, null, null]
+]
+var mutex: Mutex
 var tek_nodes: Array = [
 	[null, null, null, null],
 	[null, null, null, null],
@@ -25,7 +34,7 @@ const start_y = -270
 const max_rows = 13
 const max_cols = 8
 
-const def_x = 2
+const def_x = 3
 const def_y = 0
 
 const def_size = 40
@@ -54,14 +63,18 @@ var bits: Array = [ # 13x8
 var ignore_ = false
 
 func _ready() -> void:
+	mutex = Mutex.new()
 	new_game()
 
 func _physics_process(_delta: float) -> void:
 	if ignore_:
 		return
-	if timer.is_stopped():
+	if game_over.visible:
 		if Input.is_action_pressed("ui_text_newline"):
 			new_game()
+		return
+	if Input.is_action_pressed("ui_up"):
+		rotate_tile()
 		return
 	var old_x = tek_x
 	var _x = tek_x
@@ -77,6 +90,7 @@ func _physics_process(_delta: float) -> void:
 	var _y = tek_y
 	if Input.is_action_pressed("quick_down"):
 		ignore_ = true
+		timer.stop()
 		var find_ground = _y
 		for _q in range(_y, max_rows):
 			find_ground = _q
@@ -86,6 +100,7 @@ func _physics_process(_delta: float) -> void:
 			tek_y = _q
 			show_tile()
 		await get_tree().create_timer(0.5).timeout
+		timer.start()
 		new_tile()
 		ignore_ = false
 		return
@@ -111,16 +126,20 @@ func new_game() -> void:
 			if bits[iy][ix]:
 				var node = bits[iy][ix]
 				bits[iy][ix] = null
+				node.visible = false
 				control_tiles.remove_child(node)
 				node.queue_free()
 
+	mutex.lock()
 	for ix in range(0, 4):
 		for iy in range(0, 4):
 			if tek_nodes[iy][ix]:
 				var node = tek_nodes[iy][ix]
+				node.visible = false
 				tek_nodes[iy][ix] = null
 				control_tiles.remove_child(node)
 				node.queue_free()
+	mutex.unlock()
 
 	new_tile()
 
@@ -131,12 +150,13 @@ func end_game() -> void:
 	game_over.visible = true
 
 func get_color_for_new_tile() -> Color:
-	return colors[randi() % 5]
+	return colors[randi_range(1, colors_size) - 1]
 
 func get_new_figure_for_tile() -> Array:
-	return tiles[randi() % 5]
+	return tiles[randi_range(1, tiles_size) - 1]
 
 func new_tile() -> void:
+	mutex.lock()
 	for ix in range(0, 4):
 		for iy in range(0, 4):
 			if tek_nodes[iy][ix]:
@@ -147,8 +167,8 @@ func new_tile() -> void:
 	tek_y = def_y
 	var tek_color = get_color_for_new_tile()
 	var tile0 = get_new_figure_for_tile()
-	tek_r = tile0[0]
-	tek_r_max = tile0[5]
+	tek_r = 0
+	tek_r_max = tile0[0]
 	for i in range(1, 5):
 		var x = tile0[i] / 10 - 1
 		var y = tile0[i] % 10 - 1
@@ -157,39 +177,127 @@ func new_tile() -> void:
 		node.visible = true
 		control_tiles.add_child(node)
 		tek_nodes[y][x] = node
+	mutex.unlock()
 
 	show_tile()
 
 	if !check_tile(tek_x, tek_y):
 		end_game()
 
+func rotate_tile() -> void:
+	if tek_r_max == 0:
+		return
+	if tek_r_max == 1:
+		mutex.lock()
+		for ix in range(0, 4):
+			for iy in range(0, 4):
+				maybe_nodes[iy][ix] = tek_nodes[iy][ix]
+		if tek_r == 0: # 11, 12, 13, 14
+			var rotates = [ [0, 1, 1, 0], [0, 2, 2, 0], [0, 3, 3, 0] ]
+			for np in rotates:
+				maybe_nodes[np[3]][np[2]] = maybe_nodes[np[1]][np[0]]
+				maybe_nodes[np[1]][np[0]] = null
+			if check_maybe(tek_x, tek_y, maybe_nodes):
+				tek_r = 90
+				for ix in range(0, 4):
+					for iy in range(0, 4):
+						tek_nodes[iy][ix] = maybe_nodes[iy][ix]
+				mutex.unlock()
+				show_tile()
+			else:
+				mutex.unlock()
+		else: # tek_r == 90
+			var rotates = [ [1, 0, 0, 1], [2, 0, 0, 2], [3, 0, 0, 3] ]
+			for np in rotates:
+				maybe_nodes[np[3]][np[2]] = maybe_nodes[np[1]][np[0]]
+				maybe_nodes[np[1]][np[0]] = null
+			if check_maybe(tek_x, tek_y, maybe_nodes):
+				tek_r = 0
+				for ix in range(0, 4):
+					for iy in range(0, 4):
+						tek_nodes[iy][ix] = maybe_nodes[iy][ix]
+				mutex.unlock()
+				show_tile()
+			else:
+				mutex.unlock()
+	else: # tek_r_max == 4
+		mutex.lock()
+		var rotates = [
+			[0, 0, 2, 0], [1, 0, 2, 1],
+			[2, 0, 2, 2], [2, 1, 1, 2],
+			[2, 2, 0, 2], [1, 2, 0, 1],
+			[0, 2, 0, 0], [0, 1, 1, 0],
+			[1, 1, 1, 1]
+		]
+		for np in rotates:
+			maybe_nodes[np[3]][np[2]] = tek_nodes[np[1]][np[0]]
+		if check_maybe(tek_x, tek_y, maybe_nodes):
+			for ix in range(0, 3):
+				for iy in range(0, 3):
+					tek_nodes[iy][ix] = maybe_nodes[iy][ix]
+			mutex.unlock()
+			show_tile()
+		else:
+			mutex.unlock()
+
 func show_tile() -> void:
+	mutex.lock()
 	for ix in range(0, 4):
 		for iy in range(0, 4):
 			if tek_nodes[iy][ix]:
 				tek_nodes[iy][ix].position.x = start_x + def_size * (ix + tek_x)
 				tek_nodes[iy][ix].position.y = start_y + def_size * (iy + tek_y)
+	mutex.unlock()
 
 func check_tile_x(new_x) -> bool:
+	mutex.lock()
 	for ix in range(0, 4):
 		for iy in range(0, 4):
 			if tek_nodes[iy][ix]:
-				if (ix + new_x) >= max_cols: return false
-				if bits[iy + tek_y][ix + new_x] != null: return false
+				if (ix + new_x) >= max_cols:
+					mutex.unlock()
+					return false
+				if bits[iy + tek_y][ix + new_x] != null:
+					mutex.unlock()
+					return false
+	mutex.unlock()
 	return true
 
 func check_tile_y(new_y) -> bool:
+	mutex.lock()
 	for ix in range(0, 4):
 		for iy in range(0, 4):
 			if tek_nodes[iy][ix]:
-				if (iy + new_y) >= max_rows: return false
-				if bits[iy + new_y][ix + tek_x] != null: return false
+				if (iy + new_y) >= max_rows:
+					mutex.unlock()
+					return false
+				if bits[iy + new_y][ix + tek_x] != null:
+					mutex.unlock()
+					return false
+	mutex.unlock()
 	return true
 
 func check_tile(new_x, new_y) -> bool:
+	mutex.lock()
 	for ix in range(0, 4):
 		for iy in range(0, 4):
 			if tek_nodes[iy][ix]:
+				if (ix + new_x) >= max_cols:
+					mutex.unlock()
+					return false
+				if (iy + new_y) >= max_rows:
+					mutex.unlock()
+					return false
+				if bits[iy + new_y][ix + new_x] != null:
+					mutex.unlock()
+					return false
+	mutex.unlock()
+	return true
+
+func check_maybe(new_x, new_y, maybe_nodes_) -> bool:
+	for ix in range(0, 4):
+		for iy in range(0, 4):
+			if maybe_nodes_[iy][ix]:
 				if (ix + new_x) >= max_cols: return false
 				if (iy + new_y) >= max_rows: return false
 				if bits[iy + new_y][ix + new_x] != null: return false
@@ -198,7 +306,7 @@ func check_tile(new_x, new_y) -> bool:
 func _on_timer_timeout() -> void:
 	if ignore_:
 		return
-	if !check_tile_y(tek_y + 1):
+	if !check_tile(tek_x, tek_y + 1):
 		new_tile()
 		return
 	tek_y += 1
