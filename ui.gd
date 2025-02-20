@@ -131,6 +131,7 @@ func set_score(new_score) -> void:
 func new_game() -> void:
 	game_over.visible = false
 	tek_score = 0
+	timer.wait_time = 1.0
 
 	for ix in range(max_cols):
 		for iy in range(max_rows):
@@ -213,6 +214,9 @@ func find_and_delete_full_lines() -> void:
 		del_line = get_full_line()
 		if del_line:
 			tek_score += 1
+			if tek_score % 10 == 0:
+				timer.wait_time -= 0.1
+				pass
 			for ix in range(max_cols):
 				var node = bits[del_line - 1][ix]
 				bits[del_line - 1][ix] = null
