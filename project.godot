@@ -13,8 +13,6 @@ config_version=5
 config/name="Tetris 2D"
 config/description="Easy Tetris 2D - written in Godot 4.3
 
-TODO
- - add release for smartphones
 "
 config/version="0.1.5.0"
 run/main_scene="res://ui.tscn"
