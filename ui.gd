@@ -8,9 +8,10 @@ var tile4 = [23, 21, 11, 12, 13]
 var tile5 = [23, 11, 12, 13, 22]
 var tiles = [tile1, tile2, tile3, tile4, tile5]
 
-var tek_tile = [[0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]]
 var tek_x: int = 0
 var tek_y: int = 0
+var tek_r: int = 0
+var tek_r_max: int = 0
 var tek_nodes: Array = [
 	[null, null, null, null],
 	[null, null, null, null],
@@ -115,9 +116,9 @@ func new_game() -> void:
 
 	for ix in range(0, 4):
 		for iy in range(0, 4):
-			if tek_nodes[ix][iy]:
-				var node = tek_nodes[ix][iy]
-				tek_nodes[ix][iy] = null
+			if tek_nodes[iy][ix]:
+				var node = tek_nodes[iy][ix]
+				tek_nodes[iy][ix] = null
 				control_tiles.remove_child(node)
 				node.queue_free()
 
@@ -138,24 +139,24 @@ func get_new_figure_for_tile() -> Array:
 func new_tile() -> void:
 	for ix in range(0, 4):
 		for iy in range(0, 4):
-			if tek_tile[ix][iy]:
-				bits[iy + tek_y][ix + tek_x] = tek_nodes[ix][iy]
-				tek_nodes[ix][iy] = null
-			tek_tile[ix][iy] = 0
+			if tek_nodes[iy][ix]:
+				bits[iy + tek_y][ix + tek_x] = tek_nodes[iy][ix]
+				tek_nodes[iy][ix] = null
 
 	tek_x = def_x
 	tek_y = def_y
 	var tek_color = get_color_for_new_tile()
 	var tile0 = get_new_figure_for_tile()
+	tek_r = tile0[0]
+	tek_r_max = tile0[5]
 	for i in range(1, 5):
 		var x = tile0[i] / 10 - 1
 		var y = tile0[i] % 10 - 1
-		tek_tile[x][y] = 1
 		var node = tiles_cube.duplicate()
 		node.color = tek_color
 		node.visible = true
 		control_tiles.add_child(node)
-		tek_nodes[x][y] = node
+		tek_nodes[y][x] = node
 
 	show_tile()
 
@@ -165,14 +166,14 @@ func new_tile() -> void:
 func show_tile() -> void:
 	for ix in range(0, 4):
 		for iy in range(0, 4):
-			if tek_tile[ix][iy]:
-				tek_nodes[ix][iy].position.x = start_x + def_size * (ix + tek_x)
-				tek_nodes[ix][iy].position.y = start_y + def_size * (iy + tek_y)
+			if tek_nodes[iy][ix]:
+				tek_nodes[iy][ix].position.x = start_x + def_size * (ix + tek_x)
+				tek_nodes[iy][ix].position.y = start_y + def_size * (iy + tek_y)
 
 func check_tile_x(new_x) -> bool:
 	for ix in range(0, 4):
 		for iy in range(0, 4):
-			if tek_tile[ix][iy]:
+			if tek_nodes[iy][ix]:
 				if (ix + new_x) >= max_cols: return false
 				if bits[iy + tek_y][ix + new_x] != null: return false
 	return true
@@ -180,7 +181,7 @@ func check_tile_x(new_x) -> bool:
 func check_tile_y(new_y) -> bool:
 	for ix in range(0, 4):
 		for iy in range(0, 4):
-			if tek_tile[ix][iy]:
+			if tek_nodes[iy][ix]:
 				if (iy + new_y) >= max_rows: return false
 				if bits[iy + new_y][ix + tek_x] != null: return false
 	return true
@@ -188,7 +189,7 @@ func check_tile_y(new_y) -> bool:
 func check_tile(new_x, new_y) -> bool:
 	for ix in range(0, 4):
 		for iy in range(0, 4):
-			if tek_tile[ix][iy]:
+			if tek_nodes[iy][ix]:
 				if (ix + new_x) >= max_cols: return false
 				if (iy + new_y) >= max_rows: return false
 				if bits[iy + new_y][ix + new_x] != null: return false
