@@ -198,40 +198,30 @@ func rotate_tile() -> void:
 
 	if tek_r_max == 1:
 		mutex.lock()
-		if tek_r == 0: # 11, 12, 13, 14
-			var rotates = [ [0, 1, 1, 0], [0, 2, 2, 0], [0, 3, 3, 0], [0, 0, 0, 0] ]
-			for np in rotates:
+		var rotates = [ [0, 1, 1, 0], [0, 2, 2, 0], [0, 3, 3, 0], [0, 0, 0, 0] ]
+		for np in rotates:
+			if tek_r == 0:
 				maybe_nodes[np[3]][np[2]] = tek_nodes[np[1]][np[0]]
-			if check_maybe(tek_x, tek_y, maybe_nodes):
+			else:
+				maybe_nodes[np[1]][np[0]] = tek_nodes[np[3]][np[2]]
+		if check_maybe(tek_x, tek_y, maybe_nodes):
+			if tek_r == 0:
 				tek_r = 90
-				for ix in range(0, 4):
-					for iy in range(0, 4):
-						tek_nodes[iy][ix] = maybe_nodes[iy][ix]
-				mutex.unlock()
-				show_tile()
 			else:
-				mutex.unlock()
-		else: # tek_r == 90
-			var rotates = [ [1, 0, 0, 1], [2, 0, 0, 2], [3, 0, 0, 3], [0, 0, 0, 0] ]
-			for np in rotates:
-				maybe_nodes[np[3]][np[2]] = tek_nodes[np[1]][np[0]]
-			if check_maybe(tek_x, tek_y, maybe_nodes):
 				tek_r = 0
-				for ix in range(0, 4):
-					for iy in range(0, 4):
-						tek_nodes[iy][ix] = maybe_nodes[iy][ix]
-				mutex.unlock()
-				show_tile()
-			else:
-				mutex.unlock()
+			for ix in range(0, 4):
+				for iy in range(0, 4):
+					tek_nodes[iy][ix] = maybe_nodes[iy][ix]
+			mutex.unlock()
+			show_tile()
+		else:
+			mutex.unlock()
 
 	if tek_r_max == 4:
 		mutex.lock()
 		var rotates = [
-			[0, 0, 2, 0], [1, 0, 2, 1],
-			[2, 0, 2, 2], [2, 1, 1, 2],
-			[2, 2, 0, 2], [1, 2, 0, 1],
-			[0, 2, 0, 0], [0, 1, 1, 0],
+			[0, 0, 2, 0], [1, 0, 2, 1], [2, 0, 2, 2], [2, 1, 1, 2],
+			[2, 2, 0, 2], [1, 2, 0, 1], [0, 2, 0, 0], [0, 1, 1, 0],
 			[1, 1, 1, 1]
 		]
 		for np in rotates:
@@ -247,40 +237,27 @@ func rotate_tile() -> void:
 
 	if tek_r_max == 2:
 		mutex.lock()
-		if tek_r == 0:
-			var rotates = [
-				[2, 0, 0, 0], [2, 1, 1, 0],
-				[0, 1, 1, 2], [0, 0, 0, 2],
-				[1, 0, 0, 1], [1, 1, 1, 1]
-			]
-			for np in rotates:
+		var rotates = [
+			[2, 0, 0, 0], [2, 1, 1, 0], [0, 1, 1, 2], [0, 0, 0, 2],
+			[1, 0, 0, 1], [1, 1, 1, 1]
+		]
+		for np in rotates:
+			if tek_r == 0:
 				maybe_nodes[np[3]][np[2]] = tek_nodes[np[1]][np[0]]
-			if check_maybe(tek_x, tek_y, maybe_nodes):
+			else:
+				maybe_nodes[np[1]][np[0]] = tek_nodes[np[3]][np[2]]
+		if check_maybe(tek_x, tek_y, maybe_nodes):
+			if tek_r == 0:
 				tek_r = 90
-				for ix in range(0, 3):
-					for iy in range(0, 3):
-						tek_nodes[iy][ix] = maybe_nodes[iy][ix]
-				mutex.unlock()
-				show_tile()
 			else:
-				mutex.unlock()
-		else: # tek_r == 90
-			var rotates = [
-				[0, 0, 2, 0], [1, 0, 2, 1],
-				[0, 2, 0, 0], [1, 2, 0, 1],
-				[0, 1, 1, 0], [1, 1, 1, 1]
-			]
-			for np in rotates:
-				maybe_nodes[np[3]][np[2]] = tek_nodes[np[1]][np[0]]
-			if check_maybe(tek_x, tek_y, maybe_nodes):
 				tek_r = 0
-				for ix in range(0, 3):
-					for iy in range(0, 3):
-						tek_nodes[iy][ix] = maybe_nodes[iy][ix]
-				mutex.unlock()
-				show_tile()
-			else:
-				mutex.unlock()
+			for ix in range(0, 3):
+				for iy in range(0, 3):
+					tek_nodes[iy][ix] = maybe_nodes[iy][ix]
+			mutex.unlock()
+			show_tile()
+		else:
+			mutex.unlock()
 
 func show_tile() -> void:
 	mutex.lock()
