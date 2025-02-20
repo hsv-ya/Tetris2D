@@ -82,4 +82,14 @@ for
 New game"
 horizontal_alignment = 1
 
+[node name="Score" type="Label" parent="."]
+layout_mode = 0
+offset_left = 206.0
+offset_top = -247.0
+offset_right = 336.0
+offset_bottom = -192.0
+theme_override_font_sizes/font_size = 40
+text = "0"
+horizontal_alignment = 2
+
 [connection signal="timeout" from="Timer" to="." method="_on_timer_timeout"]

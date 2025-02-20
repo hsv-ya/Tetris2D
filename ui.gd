@@ -14,6 +14,7 @@ var tile7 = [2, 12, 22, 21, 31]
 var tiles = [tile1, tile2, tile3, tile4, tile5, tile6, tile7]
 var tiles_size = tiles.size()
 
+var tek_score: int = 0 : set = set_score
 var tek_x: int = 0
 var tek_y: int = 0
 var tek_r: int = 0
@@ -47,6 +48,7 @@ const def_size = 40
 @onready var game_over = $GameOver
 @onready var tiles_cube = $Tiles/Cube
 @onready var control_tiles = $Tiles
+@onready var score = $Score
 
 var bits: Array = [ # 13x8
 	[null, null, null, null, null, null, null, null],
@@ -122,8 +124,13 @@ func _physics_process(_delta: float) -> void:
 			return
 		show_tile()
 
+func set_score(new_score) -> void:
+	tek_score = new_score
+	score.text = str(tek_score)
+
 func new_game() -> void:
 	game_over.visible = false
+	tek_score = 0
 
 	for ix in range(max_cols):
 		for iy in range(max_rows):
@@ -205,6 +212,7 @@ func find_and_delete_full_lines() -> void:
 	while del_line:
 		del_line = get_full_line()
 		if del_line:
+			tek_score += 1
 			for ix in range(max_cols):
 				var node = bits[del_line - 1][ix]
 				bits[del_line - 1][ix] = null

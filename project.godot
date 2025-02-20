@@ -14,11 +14,10 @@ config/name="Tetris 2D"
 config/description="Easy Tetris 2D - written in Godot 4.3
 
 TODO
- - add scoring
  - add an increase in falling speed
  - add release for smartphones
 "
-config/version="0.1.3.0"
+config/version="0.1.4.0"
 run/main_scene="res://ui.tscn"
 config/features=PackedStringArray("4.3", "GL Compatibility")
 config/icon="res://icon.svg"
