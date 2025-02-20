@@ -167,6 +167,8 @@ func new_tile() -> void:
 				bits[iy + tek_y][ix + tek_x] = tek_nodes[iy][ix]
 				tek_nodes[iy][ix] = null
 
+	find_and_delete_full_lines()
+
 	tek_x = def_x
 	tek_y = def_y
 	var tek_color = get_color_for_new_tile()
@@ -187,6 +189,40 @@ func new_tile() -> void:
 
 	if !check_tile(tek_x, tek_y):
 		end_game()
+
+func get_full_line() -> int:
+	for iy in range(max_rows, 0, -1):
+		var result = 0
+		for ix in range(max_cols):
+			if bits[iy - 1][ix] != null:
+				result += 1
+		if result == max_cols:
+			return iy
+	return 0
+
+func find_and_delete_full_lines() -> void:
+	var del_line = 1
+	while del_line:
+		del_line = get_full_line()
+		if del_line:
+			for ix in range(max_cols):
+				var node = bits[del_line - 1][ix]
+				bits[del_line - 1][ix] = null
+				node.visible = false
+				node.queue_free()
+			if del_line == max_rows:
+				bits.resize(max_rows - 1)
+			else:
+				bits.remove_at(del_line - 1)
+			var new_line = []
+			new_line.resize(max_cols)
+			new_line.fill(null)
+			bits.push_front(new_line)
+			for iy in range(del_line):
+				for ix in range(max_cols):
+					var node = bits[iy][ix]
+					if node:
+						node.position.y += def_size
 
 func rotate_tile() -> void:
 	if tek_r_max == 0:
